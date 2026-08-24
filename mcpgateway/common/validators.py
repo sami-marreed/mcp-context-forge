@@ -63,6 +63,7 @@ import uuid
 
 # First-Party
 from mcpgateway.config import settings
+from mcpgateway.utils.paths import is_path_within
 
 logger = logging.getLogger(__name__)
 
@@ -2269,7 +2270,9 @@ class SecurityValidator:
 
             # Check against allowed roots
             if allowed_roots:
-                allowed = any(str(resolved_path).startswith(str(Path(root).resolve())) for root in allowed_roots)
+                # Component-aware confinement: a plain string prefix would let a sibling
+                # directory such as /srv/data_secret pass a /srv/data root.
+                allowed = any(is_path_within(resolved_path, Path(root).resolve()) for root in allowed_roots)
                 if not allowed:
                     raise ValueError("Path outside allowed roots")
 
